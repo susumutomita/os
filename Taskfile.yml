@@ -1,0 +1,110 @@
+version: "3"
+
+tasks:
+  default:
+    cmds:
+      - task --list-all
+    silent: true
+
+  up:
+    cmds:
+      - docker compose up -d
+
+  down:
+    cmds:
+      - docker compose down
+
+  rebuild:
+    cmds:
+      - docker compose down
+      - docker compose build --no-cache
+      - docker compose up -d
+
+  shell:
+    cmds:
+      - docker compose exec os-dev bash
+
+  logs:
+    cmds:
+      - docker compose logs -f
+
+  dev:
+    cmds:
+      - task: up
+      - task: run:watch
+
+  update-refs:
+    cmds:
+      - git submodule update --remote
+
+  # ---------------------------
+  # Lint
+  # ---------------------------
+  lint:
+    desc: Run all lint checks
+    cmds:
+      - task lint:yaml
+      - task lint:rust
+
+  lint:yaml:
+    cmds:
+      - docker run --rm -v {{.PWD}}:/work giantswarm/yamllint .
+
+  lint:rust:
+    cmds:
+      - docker compose exec -T os-dev cargo fmt --all -- --check
+      - >-
+        docker compose exec -T os-dev cargo clippy
+        --workspace -- -D warnings
+
+  # ---------------------------
+  # format
+  # ---------------------------
+  format:
+    desc: Run all format checks
+    cmds:
+      - task format:yaml
+      - task format:rust
+  format:yaml:
+    cmds:
+      - >-
+        docker run --rm -v {{.PWD}}:/work giantswarm/yamllint
+        -f parsable . | tee format.yaml
+      - >-
+        docker run --rm -v {{.PWD}}:/work -i giantswarm/yamllint
+        -f parsable . < format.yaml
+  format:rust:
+    cmds:
+      - docker compose exec -T os-dev cargo fmt --all
+      - >-
+        docker compose exec -T os-dev cargo clippy
+        --workspace -- -D warnings
+
+  # ---------------------------
+  # Test
+  # ---------------------------
+  test:
+    cmds:
+      - >-
+        docker compose exec -T os-dev cargo test
+        --workspace
+
+  before-commit:
+    cmds:
+      - task lint
+      - task test
+
+  # ---------------------------
+  # Run
+  # ---------------------------
+  run:
+    cmds:
+      - >-
+        docker compose exec -T os-dev cargo run
+        --workspace
+
+  run:watch:
+    cmds:
+      - >-
+        docker compose exec -T os-dev cargo watch
+        -x "run --workspace"
