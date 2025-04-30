@@ -1,0 +1,11 @@
+services:
+  os-dev:
+    platform: linux/amd64
+    build: .
+    volumes:
+      - .:/app
+    tty: true
+    stdin_open: true
+    environment:
+      - RUST_BACKTRACE=1
+      - CARGO_HOME=/app/.cargo
