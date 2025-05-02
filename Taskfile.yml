@@ -89,6 +89,14 @@ tasks:
         docker compose exec -T os-dev cargo test
         --workspace
 
+  test:coverage:
+    desc: Run tests with coverage report using cargo-tarpaulin
+    cmds:
+      - >-
+        docker compose exec -T os-dev cargo install cargo-tarpaulin --locked
+      - >-
+        docker compose exec -T os-dev cargo tarpaulin --workspace
+
   before-commit:
     cmds:
       - task lint
