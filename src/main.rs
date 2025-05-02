@@ -2,6 +2,7 @@ fn main() {
     println!("Hello, world!");
 }
 
+// These directives are experimental and intended for a future transition to a no_std/no_main environment.
 // #![no_std]
 // #![no_main]
 
