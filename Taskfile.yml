@@ -48,14 +48,12 @@ tasks:
 
   lint:yaml:
     cmds:
-      - docker run --rm -v {{.PWD}}:/work giantswarm/yamllint .
+      - yamllint .
 
   lint:rust:
     cmds:
-      - docker compose exec -T os-dev cargo fmt --all -- --check
-      - >-
-        docker compose exec -T os-dev cargo clippy
-        --workspace -- -D warnings
+      - cargo fmt --all -- --check
+      - cargo clippy --workspace -- -D warnings
 
   # ---------------------------
   # format
@@ -67,35 +65,25 @@ tasks:
       - task format:rust
   format:yaml:
     cmds:
-      - >-
-        docker run --rm -v {{.PWD}}:/work giantswarm/yamllint
-        -f parsable . | tee format.yaml
-      - >-
-        docker run --rm -v {{.PWD}}:/work -i giantswarm/yamllint
-        -f parsable . < format.yaml
+      - yamllint -f parsable . | tee format.yaml
+      - yamllint -f parsable . < format.yaml
   format:rust:
     cmds:
-      - docker compose exec -T os-dev cargo fmt --all
-      - >-
-        docker compose exec -T os-dev cargo clippy
-        --workspace -- -D warnings
+      - cargo fmt --all
+      - cargo clippy --workspace -- -D warnings
 
   # ---------------------------
   # Test
   # ---------------------------
   test:
     cmds:
-      - >-
-        docker compose exec -T os-dev cargo test
-        --workspace
+      - cargo test --workspace
 
   test:coverage:
     desc: Run tests with coverage report using cargo-tarpaulin
     cmds:
-      - >-
-        docker compose exec -T os-dev cargo install cargo-tarpaulin --locked
-      - >-
-        docker compose exec -T os-dev cargo tarpaulin --workspace
+      - cargo install cargo-tarpaulin --locked
+      - cargo tarpaulin --workspace
 
   before-commit:
     cmds:
@@ -107,11 +95,19 @@ tasks:
   # ---------------------------
   run:
     cmds:
+      - cargo run -- --target x86_64-unknown-uefi --workspace
+
+  run:watch:
+    cmds:
+      - cargo watch -x "run --workspace"
+
+  run-docker:
+    cmds:
       - >-
         docker compose exec -T os-dev cargo run
         --workspace
 
-  run:watch:
+  run-docker:watch:
     cmds:
       - >-
         docker compose exec -T os-dev cargo watch
