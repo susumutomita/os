@@ -76,8 +76,10 @@ tasks:
   # Test
   # ---------------------------
   test:
+    desc: Run tests (note UEFIビルドではテスト不可)
     cmds:
-      - cargo test --workspace
+      - echo "Note UEFI target does not support standard tests"
+      - echo "Use 'task run' to test the bootloader in QEMU"
 
   test:coverage:
     desc: Run tests with coverage report using cargo-tarpaulin
@@ -88,27 +90,55 @@ tasks:
   before-commit:
     cmds:
       - task lint
-      - task test
+      # - task test # UEFI環境ではテスト不可
 
   # ---------------------------
   # Run
   # ---------------------------
-  run:
+  build:
+    desc: Build for x86_64 UEFI target
     cmds:
-      - cargo run -- --target x86_64-unknown-uefi --workspace
+      - >-
+        cargo +nightly build --target x86_64-unknown-uefi
+        -Zbuild-std=core,compiler_builtins,alloc,panic_abort
+        -Zbuild-std-features=compiler-builtins-mem
+
+  build:release:
+    desc: Build release version for x86_64 UEFI target
+    cmds:
+      - >-
+        cargo +nightly build --target x86_64-unknown-uefi --release
+        -Zbuild-std=core,compiler_builtins,alloc,panic_abort
+        -Zbuild-std-features=compiler-builtins-mem
+
+  run:
+    desc: Build and run in QEMU
+    cmds:
+      - task: build
+      - >-
+        cargo +nightly run --target x86_64-unknown-uefi
+        -Zbuild-std=core,compiler_builtins,alloc,panic_abort
+        -Zbuild-std-features=compiler-builtins-mem
 
   run:watch:
     cmds:
-      - cargo watch -x "run --workspace"
+      - >-
+        cargo watch -x "+nightly run --target x86_64-unknown-uefi
+        -Zbuild-std=core,compiler_builtins,alloc,panic_abort
+        -Zbuild-std-features=compiler-builtins-mem"
 
   run-docker:
     cmds:
       - >-
-        docker compose exec -T os-dev cargo run
-        --workspace
+        docker compose exec -T os-dev cargo +nightly run
+        --target x86_64-unknown-uefi
+        -Zbuild-std=core,compiler_builtins,alloc,panic_abort
+        -Zbuild-std-features=compiler-builtins-mem
 
   run-docker:watch:
     cmds:
       - >-
         docker compose exec -T os-dev cargo watch
-        -x "run --workspace"
+        -x "+nightly run --target x86_64-unknown-uefi
+        -Zbuild-std=core,compiler_builtins,alloc,panic_abort
+        -Zbuild-std-features=compiler-builtins-mem"
