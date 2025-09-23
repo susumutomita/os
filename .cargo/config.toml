@@ -17,10 +17,3 @@ rustflags = [
   "-Cforce-frame-pointers",
   "-Cno-redzone",
 ]
-
-[target.'x86_64-unknown-uefi'.unstable]
-build-std = ["core", "compiler_builtins", "alloc", "panic_abort"]
-build-std-features = ["compiler-builtins-mem"]
-
-[target.'cfg(target_os = "uefi")']
-runner = "bash scripts/launch_qemu.sh"
