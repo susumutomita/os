@@ -98,7 +98,8 @@ tasks:
   before-commit:
     cmds:
       - task lint
-      # - task test # UEFI環境ではテスト不可
+      - task test
+      - task build
 
   # ---------------------------
   # Run
