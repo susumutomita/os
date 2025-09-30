@@ -33,20 +33,6 @@ const EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID: EfiGuid = EfiGuid {
 #[no_mangle]
 fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
     let mut vram = init_vram(efi_system_table).expect("init_vram failed");
-    // for y in 0..vram.height {
-    //     for x in 0..vram.width {
-    //         if let Some(pixel) = vram.pixel_at_mut(x, y) {
-    //             *pixel = 0x00ff00;
-    //         }
-    //     }
-    // }
-    // for y in 0..vram.height / 2 {
-    //     for x in 0..vram.width / 2 {
-    //         if let Some(pixel) = vram.pixel_at_mut(x, y) {
-    //             *pixel = 0xff0000;
-    //         }
-    //     }
-    // }
     let vw = vram.width;
     let vh = vram.height;
     fill_rect(&mut vram, 0x000000, 0, 0, vw, vh).expect("fill_rect failed");
@@ -56,9 +42,61 @@ fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
     for i in 0..256 {
         let _ = draw_point(&mut vram, 0x010101 * i as u32, i, i);
     }
-    // println!("Hello, world!");fill_rect(&mut vram, 0x000000, 0,0, vw, vh).expect("fill_rect failed");
+    let grid_size: i64 = 32;
+    let rect_size: i64 = grid_size * 8;
+    for i in (0..=rect_size).step_by(grid_size as usize) {
+        let _ = draw_line(&mut vram, 0xff0000, 0, i, rect_size, i);
+        let _ = draw_line(&mut vram, 0xff0000, i, 0, i, rect_size);
+    }
+    let cx = rect_size / 2;
+    let cy = rect_size / 2;
+    for i in (0..=rect_size).step_by(grid_size as usize) {
+        let _ = draw_line(&mut vram, 0xffff00, cx, cy, 0, i);
+        let _ = draw_line(&mut vram, 0x00ffff, cx, cy, i, 0);
+        let _ = draw_line(&mut vram, 0xff00ff, cx, cy, rect_size, i);
+        let _ = draw_line(&mut vram, 0xffffff, cx, cy, i, rect_size);
+    }
+    // println!("Hello, world!");
     #[allow(clippy::empty_loop)]
-    loop {}
+    loop {
+        hlt();
+    }
+}
+
+fn calc_slope_point(da: i64, db: i64, ia: i64) -> Option<i64> {
+    if da < db {
+        None
+    } else if da == 0 {
+        Some(0)
+    } else if (0..=da).contains(&ia) {
+        Some((2 * db * ia + da) / da / 2)
+    } else {
+        None
+    }
+}
+
+fn draw_line<T: Bitmap>(buf: &mut T, color: u32, x0: i64, y0: i64, x1: i64, y1: i64) -> Result<()> {
+    if !buf.is_in_x_range(x0)
+        || !buf.is_in_x_range(x1)
+        || !buf.is_in_y_range(y0)
+        || !buf.is_in_y_range(y1)
+    {
+        return Err("Out of range");
+    }
+    let dx = (x1 - x0).abs();
+    let sx = if x1 > x0 { 1 } else { -1 };
+    let dy = (y1 - y0).abs();
+    let sy = if y1 > y0 { 1 } else { -1 };
+    if dx >= dy {
+        for (rx, ry) in (0..=dx).flat_map(|rx| calc_slope_point(dx, dy, rx).map(|ry| (rx, ry))) {
+            draw_point(buf, color, x0 + rx * sx, y0 + ry * sy)?;
+        }
+    } else {
+        for (ry, rx) in (0..=dy).flat_map(|ry| calc_slope_point(dy, dx, ry).map(|rx| (rx, ry))) {
+            draw_point(buf, color, x0 + rx * sx, y0 + ry * sy)?;
+        }
+    }
+    Ok(())
 }
 
 #[repr(C)]
