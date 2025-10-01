@@ -48,13 +48,33 @@ fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
         let _ = draw_line(&mut vram, 0xff0000, 0, i, rect_size, i);
         let _ = draw_line(&mut vram, 0xff0000, i, 0, i, rect_size);
     }
-    let cx = rect_size / 2;
-    let cy = rect_size / 2;
-    for i in (0..=rect_size).step_by(grid_size as usize) {
-        let _ = draw_line(&mut vram, 0xffff00, cx, cy, 0, i);
-        let _ = draw_line(&mut vram, 0x00ffff, cx, cy, i, 0);
-        let _ = draw_line(&mut vram, 0xff00ff, cx, cy, rect_size, i);
-        let _ = draw_line(&mut vram, 0xffffff, cx, cy, i, rect_size);
+    // デバッグ：画面サイズと中心を確認
+    let cx = vw / 2;
+    let cy = vh / 2;
+
+    // 中心に十字線を描画（中心座標確認）
+    if cx >= 50 && cy >= 50 && cx + 50 < vw && cy + 50 < vh {
+        draw_line(&mut vram, 0xff0000, cx - 50, cy, cx + 50, cy).expect("H-line failed");
+        draw_line(&mut vram, 0x00ff00, cx, cy - 50, cx, cy + 50).expect("V-line failed");
+    }
+
+    // 画面の中心から放射状に線を描画
+    let step = 32; // 線の間隔を広げて見やすく
+                   // 上辺への放射線
+    for i in (0..vw).step_by(step as usize) {
+        let _ = draw_line(&mut vram, 0xffff00, cx, cy, i, 0);
+    }
+    // 下辺への放射線
+    for i in (0..vw).step_by(step as usize) {
+        let _ = draw_line(&mut vram, 0x00ffff, cx, cy, i, vh - 1);
+    }
+    // 左辺への放射線
+    for i in (0..vh).step_by(step as usize) {
+        let _ = draw_line(&mut vram, 0xff00ff, cx, cy, 0, i);
+    }
+    // 右辺への放射線
+    for i in (0..vh).step_by(step as usize) {
+        let _ = draw_line(&mut vram, 0xffffff, cx, cy, vw - 1, i);
     }
     // println!("Hello, world!");
     #[allow(clippy::empty_loop)]
