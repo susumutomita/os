@@ -76,6 +76,39 @@ fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
     for i in (0..vh).step_by(step as usize) {
         let _ = draw_line(&mut vram, 0xffffff, cx, cy, vw - 1, i);
     }
+
+    let font_a = "
+........
+...**...
+...**...
+...**...
+...**...
+..*..*..
+..*..*..
+..*..*..
+..*..*..
+.******.
+.*....*.
+.*....*.
+.*....*.
+***..***
+........
+........
+";
+
+    // 文字の背景を描画（確認用）
+    let _ = fill_rect(&mut vram, 0x000000, vw - 8, 0, 8, 16);
+
+    for (y, row) in font_a.trim().split('\n').enumerate() {
+        for (x, pixel) in row.chars().enumerate() {
+            let color = match pixel {
+                '*' => 0x00ff00,
+                _ => continue,
+            };
+            let _ = draw_point(&mut vram, color, vw - 8 + x as i64, y as i64);
+        }
+    }
+
     // println!("Hello, world!");
     #[allow(clippy::empty_loop)]
     loop {
