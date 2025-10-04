@@ -74,7 +74,51 @@ fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
         let _ = draw_line(&mut vram, 0xffffff, cx, cy, vw - 1, i);
     }
 
-    let font_a = "
+    //     let font_a = "
+    // ........
+    // ...**...
+    // ...**...
+    // ...**...
+    // ...**...
+    // ..*..*..
+    // ..*..*..
+    // ..*..*..
+    // ..*..*..
+    // .******.
+    // .*....*.
+    // .*....*.
+    // .*....*.
+    // ***..***
+    // ........
+    // ........
+    // ";
+
+    // 文字の背景を描画（確認用）
+    let _ = fill_rect(&mut vram, 0x000000, vw - 8, 0, 8, 16);
+
+    // for (y, row) in font_a.trim().split('\n').enumerate() {
+    //     for (x, pixel) in row.chars().enumerate() {
+    //         let color = match pixel {
+    //             '*' => 0x00ff00,
+    //             _ => continue,
+    //         };
+    //         let _ = draw_point(&mut vram, color, vw - 8 + x as i64, y as i64);
+    //     }
+    // }
+    for (i, c) in "ABCDDEF".chars().enumerate() {
+        draw_font_fg(&mut vram, i as i64 * 16 + 256, i as i64 * 16, 0xffffff, c)
+    }
+
+    // println!("Hello, world!");
+    #[allow(clippy::empty_loop)]
+    loop {
+        hlt();
+    }
+}
+
+fn draw_font_fg<T: Bitmap>(buf: &mut T, x: i64, y: i64, color: u32, c: char) {
+    if let Ok(_c) = u8::try_from(c) {
+        let font_a = "
 ........
 ...**...
 ...**...
@@ -93,23 +137,15 @@ fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
 ........
 ";
 
-    // 文字の背景を描画（確認用）
-    let _ = fill_rect(&mut vram, 0x000000, vw - 8, 0, 8, 16);
-
-    for (y, row) in font_a.trim().split('\n').enumerate() {
-        for (x, pixel) in row.chars().enumerate() {
-            let color = match pixel {
-                '*' => 0x00ff00,
-                _ => continue,
-            };
-            let _ = draw_point(&mut vram, color, vw - 8 + x as i64, y as i64);
+        for (dy, row) in font_a.trim().split('\n').enumerate() {
+            for (dx, pixel) in row.chars().enumerate() {
+                let color = match pixel {
+                    '*' => color,
+                    _ => continue,
+                };
+                let _ = draw_point(buf, color, x + dx as i64, y + dy as i64);
+            }
         }
-    }
-
-    // println!("Hello, world!");
-    #[allow(clippy::empty_loop)]
-    loop {
-        hlt();
     }
 }
 
