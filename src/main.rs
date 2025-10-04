@@ -28,8 +28,6 @@ const EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID: EfiGuid = EfiGuid {
     data3: [0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a],
 };
 
-// These directives are experimental and intended for a future transition to a no_std/no_main environment.
-
 #[no_mangle]
 fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
     let mut vram = init_vram(efi_system_table).expect("init_vram failed");
@@ -72,7 +70,6 @@ fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
     for i in (0..vh).step_by(step as usize) {
         let _ = draw_line(&mut vram, 0xff00ff, cx, cy, 0, i);
     }
-    // 右辺への放射線
     for i in (0..vh).step_by(step as usize) {
         let _ = draw_line(&mut vram, 0xffffff, cx, cy, vw - 1, i);
     }
