@@ -1,10 +1,7 @@
+# Uncomment these lines to set x86_64-unknown-uefi as default target
+# Note: This breaks normal cargo test in CI/dev environments
 # [build]
 # target = "x86_64-unknown-uefi"
-# rustflags = [
-#   "-Cforce-unwind-tables",
-#   "-Cforce-frame-pointers",
-#   "-Cno-redzone",
-# ]
 
 # [unstable]
 # build-std = ["core", "compiler_builtins", "alloc", "panic_abort"]
