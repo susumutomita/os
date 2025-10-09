@@ -1,9 +1,11 @@
-[build]
-target = "x86_64-unknown-uefi"
+# Uncomment these lines to set x86_64-unknown-uefi as default target
+# Note: This breaks normal cargo test in CI/dev environments
+# [build]
+# target = "x86_64-unknown-uefi"
 
-[unstable]
-build-std = ["core", "compiler_builtins", "alloc", "panic_abort"]
-build-std-features = ["compiler-builtins-mem"]
+# [unstable]
+# build-std = ["core", "compiler_builtins", "alloc", "panic_abort"]
+# build-std-features = ["compiler-builtins-mem"]
 
 [target.'x86_64-unknown-uefi']
 runner = "bash scripts/launch_qemu.sh"
