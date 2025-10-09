@@ -1,15 +1,18 @@
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(not(test), no_main)]
 
+use core::fmt;
+use core::fmt::Write;
 use core::mem::offset_of;
-use core::mem::size_of;
-
-#[cfg(not(test))]
 use core::panic::PanicInfo;
 use core::ptr::null_mut;
+use core::writeln;
 
 type EfiVoid = u8;
 type EfiHandle = u64;
+
+use core::mem::size_of;
+
 type Result<T> = core::result::Result<T, &'static str>;
 
 #[repr(C)]
@@ -80,7 +83,10 @@ fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
         draw_font_fg(&mut vram, i as i64 * 16 + 256, i as i64 * 16, 0xffffff, c)
     }
     draw_str_fg(&mut vram, 256, 256, 0xffffff, "Hello, world!");
-
+    let mut w = VramTextWriter::new(&mut vram);
+    for i in 0..4 {
+        writeln!(w, "i = {i}").unwrap();
+    }
     // println!("Hello, world!");
     #[allow(clippy::empty_loop)]
     loop {
@@ -99,6 +105,21 @@ fn draw_font_fg<T: Bitmap>(buf: &mut T, x: i64, y: i64, color: u32, c: char) {
                 let _ = draw_point(buf, color, x + dx as i64, y + dy as i64);
             }
         }
+    }
+}
+
+struct VramTextWriter<'a> {
+    vram: &'a mut VramBufferInfo,
+}
+impl<'a> VramTextWriter<'a> {
+    fn new(vram: &'a mut VramBufferInfo) -> Self {
+        Self { vram }
+    }
+}
+impl fmt::Write for VramTextWriter<'_> {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        draw_str_fg(self.vram, 0, 0, 0xffffff, s);
+        Ok(())
     }
 }
 
@@ -228,7 +249,7 @@ fn panic(_info: &PanicInfo) -> ! {
 #[inline]
 fn hlt() {
     unsafe {
-        core::arch::asm!("hlt", options(nomem, nostack, preserves_flags));
+        core::arch::asm!("hlt");
     }
 }
 
